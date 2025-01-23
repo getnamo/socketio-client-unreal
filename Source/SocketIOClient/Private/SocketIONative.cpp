@@ -428,11 +428,16 @@ void FSocketIONative::SetupInternalCallbacks()
 		bIsConnected = false;
 
 		ESIOConnectionCloseReason DisconnectReason = (ESIOConnectionCloseReason)reason;
-		FString DisconnectReasonString = UEnum::GetValueAsString<ESIOConnectionCloseReason>(DisconnectReason);
+		if (reason == NULL) {
+			DisconnectReason = ESIOConnectionCloseReason::CLOSE_REASON_NORMAL;
+		}
+
 		if (VerboseLog)
 		{
+			FString DisconnectReasonString = UEnum::GetValueAsString<ESIOConnectionCloseReason>(DisconnectReason);
 			UE_LOG(SocketIO, Log, TEXT("SocketIO Disconnected %s reason: %s"), *SessionId, *DisconnectReasonString);
 		}
+		
 		LastSessionId = SessionId;
 		SessionId = TEXT("Invalid");
 
