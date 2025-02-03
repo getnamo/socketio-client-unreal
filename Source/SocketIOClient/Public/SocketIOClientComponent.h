@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSIOCSocketEventSignature, FString, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSIOCOpenEventSignature, FString, SocketId, FString, SessionId, bool, bIsReconnection);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSIOCCloseEventSignature, TEnumAsByte<ESIOConnectionCloseReason>, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSIOCEventJsonSignature, FString, EventName, class USIOJsonValue*, EventData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSIOConnectionProblemSignature, int32, Attempts, int32,  NextAttemptInMs, float, TimeSinceConnected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSIOConnectionProblemSignature, int32, Attempts, int32, NextAttemptInMs, float, TimeSinceConnected);
 
 //For Direct Delegate Event Bind
 DECLARE_DYNAMIC_DELEGATE_OneParam(FSIOJsonValueSignature, USIOJsonValue*, EventData);
@@ -34,14 +34,14 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "SocketIO Events")
 	FSIOCOpenEventSignature OnConnected;
 
-	/** 
-	* Received on socket.io connection disconnected. This may never get 
-	* called in default settings, see OnConnectionProblems event for details. 
+	/**
+	* Received on socket.io connection disconnected. This may never get
+	* called in default settings, see OnConnectionProblems event for details.
 	*/
 	UPROPERTY(BlueprintAssignable, Category = "SocketIO Events")
 	FSIOCCloseEventSignature OnDisconnected;
 
-	/** 
+	/**
 	* Received when connection problems arise. In default settings the
 	* connection will keep repeating trying to reconnect an infinite
 	* amount of times and you may never get OnDisconnected callback
@@ -76,7 +76,7 @@ public:
 	bool bForceTLS;
 
 	/**
-	* If true, all your bound events will unbind on disconnect. 
+	* If true, all your bound events will unbind on disconnect.
 	* Useful for cleanup if typically binding on connection and there
 	* are no early event binds (before connection).
 	*/
@@ -84,9 +84,9 @@ public:
 	bool bUnbindEventsOnDisconnect;
 
 	/**
-	* If using a TLS url (or if forced) and setting this to false will not verify 
+	* If using a TLS url (or if forced) and setting this to false will not verify
 	* the authenticity of the SSL certificate (i.e. asio::ssl::verify_none).
-	* 
+	*
 	* NOTE: Certification verification is currently not implemented; setting to true will
 	* always fail verification.
 	*/
@@ -103,7 +103,7 @@ public:
 
 	/**
 	* Number of times the connection should try before giving up.
-	* Default: infinity, this means you never truly disconnect, just suffer connection problems 
+	* Default: infinity, this means you never truly disconnect, just suffer connection problems
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SocketIO Connection Properties")
 	int32 MaxReconnectionAttempts;
@@ -121,8 +121,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SocketIO Scope Properties")
 	bool bLimitConnectionToGameWorld;
 
-	/** 
-	* Toggle which enables plugin scoped connections. 
+	/**
+	* Toggle which enables plugin scoped connections.
 	* If you enable this the connection will remain until you manually call disconnect
 	* or close the app. The latest connection with the same PluginScopedId will use the same connection
 	* as the previous one and receive the same events.
@@ -165,11 +165,11 @@ public:
 	*
 	*/
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions")
-	void Connect(	const FString& InAddressAndPort = TEXT(""),
-					const FString& InPath = TEXT("socket.io"),
-					const FString& InAuthToken = TEXT(""),
-					USIOJsonObject* Query = nullptr, 
-					USIOJsonObject* Headers = nullptr);
+	void Connect(const FString& InAddressAndPort = TEXT(""),
+		const FString& InPath = TEXT("socket.io"),
+		const FString& InAuthToken = TEXT(""),
+		USIOJsonObject* Query = nullptr,
+		USIOJsonObject* Headers = nullptr);
 
 	/**
 	* Connect to a socket.io server, optional method if auto-connect is set to true.
@@ -181,7 +181,7 @@ public:
 
 	/**
 	* Disconnect from current socket.io server. This is an asynchronous action,
-	* subscribe to OnDisconnected to know when you can safely continue from a 
+	* subscribe to OnDisconnected to know when you can safely continue from a
 	* disconnected state.
 	*
 	* @param AddressAndPort	the address in URL format with port
@@ -197,7 +197,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions")
 	void JoinNamespace(const FString& Namespace);
 
-	/** 
+	/**
 	* Leave a specified namespace. Should stop listening to events on given namespace.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions")
@@ -218,6 +218,16 @@ public:
 	void Emit(const FString& EventName, USIOJsonValue* Message = nullptr, const FString& Namespace = TEXT("/"));
 
 	/**
+	* Emit an event with a JsonValue message
+	*
+	* @param Name		Event name
+	* @param Messages	TArray of Message
+	* @param Namespace	Namespace within socket.io
+	*/
+	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions")
+	void EmitMessages(const FString& EventName, const TArray <USIOJsonValue*>& Messages, const FString& Namespace = TEXT("/"));
+
+	/**
 	* Emit an event with a JsonValue message with a callback function defined by CallBackFunctionName
 	*
 	* @param Name					Event name
@@ -227,12 +237,12 @@ public:
 	* @param Namespace				Namespace within socket.io
 	*/
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions", meta = (WorldContext = "WorldContextObject"))
-	void EmitWithCallBack(	const FString& EventName,
-							USIOJsonValue* Message = nullptr,
-							const FString& CallbackFunctionName = FString(""),
-							UObject* Target = nullptr,
-							const FString& Namespace = TEXT("/"),
-							UObject* WorldContextObject = nullptr);
+	void EmitWithCallBack(const FString& EventName,
+		USIOJsonValue* Message = nullptr,
+		const FString& CallbackFunctionName = FString(""),
+		UObject* Target = nullptr,
+		const FString& Namespace = TEXT("/"),
+		UObject* WorldContextObject = nullptr);
 
 
 	/**
@@ -245,28 +255,43 @@ public:
 	* @param Namespace				Namespace within socket.io
 	*/
 	UFUNCTION(BlueprintCallable, meta = (Latent, LatentInfo = "LatentInfo"), Category = "SocketIO Functions")
-	void EmitWithGraphCallBack(	const FString& EventName,
-								struct FLatentActionInfo LatentInfo,
-								USIOJsonValue*& Result,
-								USIOJsonValue* Message = nullptr,
-								const FString& Namespace = TEXT("/"));
+	void EmitWithGraphCallBack(const FString& EventName,
+		struct FLatentActionInfo LatentInfo,
+		USIOJsonValue*& Result,
+		USIOJsonValue* Message = nullptr,
+		const FString& Namespace = TEXT("/"));
 
-
+	/**
+	* Emit an event with a MessageList with a callback function defined by CallBackFunctionName
+	*
+	* @param Name					Event name
+	* @param Message				SIOJsonValue
+	* @param CallbackFunctionName	Name of the optional callback function with signature (String, SIOJsonValue)
+	* @param Target					Optional, defaults to caller self. Change to delegate function callback to another class.
+	* @param Namespace				Namespace within socket.io
+	*/
+	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions", meta = (WorldContext = "WorldContextObject"))
+	void EmitMessagesWithCallBack(const FString& EventName,
+		const TArray <USIOJsonValue*>& Messages,
+		const FString& CallbackFunctionName = FString(""),
+		UObject* Target = nullptr,
+		const FString& Namespace = TEXT("/"),
+		UObject* WorldContextObject = nullptr);
 
 	/**
 	* Bind an event directly to a matching delegate. Drag off from red box or
 	* use create event option.
-	* 
+	*
 	* @param EventName	Event name
 	* @param CallbackDelegate Delegate that needs to be bound
 	* @param Namespace	Optional namespace, defaults to default namespace
 	* @param ThreadOverride	Optional override to receive event on specified thread. Note NETWORK thread is lower latency but unsafe for a lot of blueprint use. Use with CAUTION.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions")
-	void BindEventToDelegate(	const FString& EventName, 
-								const FSIOJsonValueSignature& CallbackDelegate, 
-								const FString& Namespace = TEXT("/"),
-								ESIOThreadOverrideOption ThreadOverride = USE_DEFAULT);
+	void BindEventToDelegate(const FString& EventName,
+		const FSIOJsonValueSignature& CallbackDelegate,
+		const FString& Namespace = TEXT("/"),
+		ESIOThreadOverrideOption ThreadOverride = USE_DEFAULT);
 
 	/**
 	* Bind an event, then respond to it with 'OnGenericEvent' multi-cast delegate.
@@ -289,12 +314,12 @@ public:
 	* @param ThreadOverride	Optional override to receive event on specified thread. Note NETWORK thread is lower latency but unsafe for a lot of blueprint use. Use with CAUTION.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "SocketIO Functions", meta = (WorldContext = "WorldContextObject"))
-	void BindEventToFunction(	const FString& EventName,
-								const FString& FunctionName,
-								UObject* Target,
-								const FString& Namespace = TEXT("/"),
-								ESIOThreadOverrideOption ThreadOverride = USE_DEFAULT,
-								UObject* WorldContextObject = nullptr);
+	void BindEventToFunction(const FString& EventName,
+		const FString& FunctionName,
+		UObject* Target,
+		const FString& Namespace = TEXT("/"),
+		ESIOThreadOverrideOption ThreadOverride = USE_DEFAULT,
+		UObject* WorldContextObject = nullptr);
 
 	/**
 	* Unbind an event from whatever it was bound to (safe to call if not already bound)
@@ -320,15 +345,15 @@ public:
 	* @param Headers http header as a FJsonObject with string keys and values
 	*
 	*/
-	void ConnectNative(	const FString& InAddressAndPort, 
-						const FString& InPath = TEXT("socket.io"),
-						const FString& InAuthToken = TEXT(""),
-						const TSharedPtr<FJsonObject>& Query = nullptr, 
-						const TSharedPtr<FJsonObject>& Headers = nullptr);
+	void ConnectNative(const FString& InAddressAndPort,
+		const FString& InPath = TEXT("socket.io"),
+		const FString& InAuthToken = TEXT(""),
+		const TSharedPtr<FJsonObject>& Query = nullptr,
+		const TSharedPtr<FJsonObject>& Headers = nullptr);
 
 
 	/**
-	* Emit an event with a JsonValue message 
+	* Emit an event with a JsonValue message
 	*
 	* @param EventName				Event name
 	* @param Message				FJsonValue
@@ -336,9 +361,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					const TSharedPtr<FJsonValue>& Message = nullptr,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		const TSharedPtr<FJsonValue>& Message = nullptr,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with a Json Object message
@@ -349,9 +374,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					const TSharedPtr<FJsonObject>& ObjectMessage = nullptr,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		const TSharedPtr<FJsonObject>& ObjectMessage = nullptr,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with a string message
@@ -362,9 +387,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					const FString& StringMessage = FString(),
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		const FString& StringMessage = FString(),
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with a string message
@@ -388,9 +413,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					double NumberMessage,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		double NumberMessage,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with a bool message
@@ -401,9 +426,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					bool BooleanMessage,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		bool BooleanMessage,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with a binary message
@@ -414,9 +439,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					const TArray<uint8>& BinaryMessage,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		const TArray<uint8>& BinaryMessage,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with an array message
@@ -427,9 +452,9 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					const TArray<TSharedPtr<FJsonValue>>& ArrayMessage,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		const TArray<TSharedPtr<FJsonValue>>& ArrayMessage,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* (Overloaded) Emit an event with an UStruct message
@@ -441,10 +466,10 @@ public:
 	* @param Namespace				Optional Namespace within socket.io
 	*/
 	void EmitNative(const FString& EventName,
-					UStruct* Struct,
-					const void* StructPtr,
-					TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
-					const FString& Namespace = TEXT("/"));
+		UStruct* Struct,
+		const void* StructPtr,
+		TFunction< void(const TArray<TSharedPtr<FJsonValue>>&)> CallbackFunction = nullptr,
+		const FString& Namespace = TEXT("/"));
 
 	/**
 	* Call function callback on receiving socket event. C++ only.
@@ -454,9 +479,9 @@ public:
 	* @param Namespace	Optional namespace, defaults to default namespace
 	* @param ThreadOverride	Optional override to receive event on specified thread. Note NETWORK thread is lower latency but unsafe for a lot of blueprint use. Use with CAUTION.
 	*/
-	void OnNativeEvent(	const FString& EventName,
-						TFunction< void(const FString&, const TSharedPtr<FJsonValue>&)> CallbackFunction,
-						const FString& Namespace = TEXT("/"),
+	void OnNativeEvent(const FString& EventName,
+		TFunction< void(const FString&, const TSharedPtr<FJsonValue>&)> CallbackFunction,
+		const FString& Namespace = TEXT("/"),
 		ESIOThreadOverrideOption ThreadOverride = USE_DEFAULT);
 
 	/**
@@ -466,11 +491,11 @@ public:
 	* @param TFunction	Lambda callback, raw flavor
 	* @param Namespace	Optional namespace, defaults to default namespace
 	*/
-	void OnBinaryEvent(	const FString& EventName,
-						TFunction< void(const FString&, const TArray<uint8>&)> CallbackFunction,
-						const FString& Namespace = TEXT("/"));
+	void OnBinaryEvent(const FString& EventName,
+		TFunction< void(const FString&, const TArray<uint8>&)> CallbackFunction,
+		const FString& Namespace = TEXT("/"));
 
-	
+
 	/** Called by SocketIOFunctionLibrary to initialize statically constructed components. */
 	void StaticInitialization(UObject* WorldContextObject, bool bValidOwnerWorld);
 
@@ -479,7 +504,7 @@ public:
 	virtual void BeginPlay() override;
 
 	~USocketIOClientComponent();
-	
+
 protected:
 	void SetupCallbacks();
 	void ClearCallbacks();
